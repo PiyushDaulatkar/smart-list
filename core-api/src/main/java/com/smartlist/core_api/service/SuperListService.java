@@ -1,5 +1,6 @@
 package com.smartlist.core_api.service;
 
+import com.smartlist.core_api.dto.listItem.AddListItemRequest;
 import com.smartlist.core_api.dto.superlist.CreateSuperListRequest;
 import com.smartlist.core_api.dto.superlist.SuperlistResponse;
 import com.smartlist.core_api.entity.ListItem;
@@ -37,11 +38,12 @@ public class SuperListService {
         return superlistMapper.toResponse(superlist);
     }
 
-    public Superlist addItemToSuperList(Long superListId, String content){
+    public SuperlistResponse addItemToSuperList(Long superListId, AddListItemRequest addListItemRequest){
         Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new RuntimeException("Superlist not found."));
         ListItem item = new ListItem();
-        item.setContent(content);
+        item.setContent(addListItemRequest.content());
         superlist.addItem(item);
-        return superListRepository.save(superlist);
+        superListRepository.save(superlist);
+        return superlistMapper.toResponse(superlist);
     }
 }
