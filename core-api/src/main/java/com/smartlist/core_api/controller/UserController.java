@@ -1,10 +1,9 @@
 package com.smartlist.core_api.controller;
 
-import com.smartlist.core_api.entity.User;
+import com.smartlist.core_api.dto.user.CreateUserRequest;
+import com.smartlist.core_api.dto.user.UserResponse;
 import com.smartlist.core_api.service.UserService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -16,13 +15,8 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
-    }
-
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public UserResponse createUser(@RequestBody CreateUserRequest user) {
         return userService.createUser(user);
     }
 }
