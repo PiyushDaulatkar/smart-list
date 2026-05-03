@@ -1,5 +1,18 @@
 # ⚠️ Problem: Infinite JSON Recursion in *Bidirectional* JPA Relationships.
 
+1. The controller (with @RestController) returns a Java object, and Spring uses Jackson to serialize it into JSON before sending the HTTP response.
+2. If there is a bidirectional relationship (for example: User (1) ↔ (N) Superlist), both entities hold references to each other.
+3. Suppose we create and return a Superlist for a user (e.g., after creation).
+4. If the controller directly returns the Superlist entity, Jackson will serialize it as follows:
+   - Start with Superlist.
+   - Call superlist.getUser() → serialize User.
+   - While serializing User, it calls user.getSuperlists().
+   - Each Superlist in that list again contains a reference to User.
+   - This cycle repeats indefinitely.
+
+👉 This leads to infinite recursion during JSON serialization, because Jackson keeps traversing the bidirectional object graph:
+Superlist → User → Superlists → User → ...
+
 ### ❗ Issue
 - When using bidirectional relationships in JPA like:\
 `User → Superlist → User → Superlist → ...`\
@@ -137,3 +150,35 @@ SuperlistDTO {
 ❌ Entities should NOT be records.
 
 ---
+
+# ⚠️ What N+1 query problem actually is
+
+- The N+1 problem is a database performance issue.
+```java
+List<User> users = userRepository.findAll(); // 1 query
+
+for (User user : users) {                    // N queries
+        user.getSuperlists().size();
+}
+```
+- Step 1 (1 query):
+```sql
+SELECT * FROM user; 
+```
+
+- Step 2 (N queries):
+```sql
+SELECT * FROM superlist WHERE user_id = ?;
+```
+
+---
+
+## 📊 Summary difference
+
+| Concept | Infinite Recursion             | N+1 Problem                                      |
+| ------- | ------------------------------ | ------------------------------------------------ |
+| Layer   | JSON serialization             | Database (JPA/Hibernate)                         |
+| Cause   | Circular object references     | Lazy loading in loops                            |
+| Trigger | Jackson                        | Hibernate                                        |
+| Result  | Infinite JSON / stack overflow | Slow performance (many queries)                  |
+| Example | User ↔ Superlist cycle         | Looping over users + accessing child collections |
