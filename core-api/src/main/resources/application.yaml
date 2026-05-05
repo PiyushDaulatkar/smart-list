@@ -4,9 +4,9 @@ spring:
 
   # INSIGHT: datasource: The object that manages database connections for your application.
   datasource:
-    url: jdbc:postgresql://172.17.0.2:5432/smart_list
-    username: smart_list_user
-    password: password
+    url: jdbc:postgresql://172.17.0.2:5432/{DB}
+    username: { DB_USER }
+    password: { DB_PASSWORD }
 
   jpa:
     hibernate:
