@@ -5,6 +5,7 @@ import com.smartlist.core_api.dto.superlist.CreateSuperListRequest;
 import com.smartlist.core_api.dto.superlist.SuperListDetailResponse;
 import com.smartlist.core_api.dto.superlist.SuperlistResponse;
 import com.smartlist.core_api.service.SuperListService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +32,7 @@ public class SuperListController {
     }
 
     @PostMapping("/user/{userId}")
-    public SuperlistResponse createSuperList(@PathVariable Long userId, @RequestBody CreateSuperListRequest superlist) {
+    public SuperlistResponse createSuperList(@PathVariable Long userId, @Valid @RequestBody CreateSuperListRequest superlist) {
         return superListService.createSuperList(userId, superlist);
     }
 
