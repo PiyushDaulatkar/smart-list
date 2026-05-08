@@ -7,6 +7,8 @@ import com.smartlist.core_api.dto.superlist.SuperlistResponse;
 import com.smartlist.core_api.entity.ListItem;
 import com.smartlist.core_api.entity.Superlist;
 import com.smartlist.core_api.entity.User;
+import com.smartlist.core_api.exception.ApiException;
+import com.smartlist.core_api.exception.ErrorType;
 import com.smartlist.core_api.mapper.SuperlistMapper;
 import com.smartlist.core_api.repository.ListItemRepository;
 import com.smartlist.core_api.repository.SuperListRepository;
@@ -31,18 +33,18 @@ public class SuperListService {
     }
 
     public List<SuperlistResponse> listSuperListsForUser(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found."));
+        User user = userRepository.findById(userId).orElseThrow(() -> new ApiException("User not found.", ErrorType.USER_NOT_FOUND));
         List<Superlist> superlists = user.getSuperlists();        
         return superlistMapper.toResponseList(superlists);
     }
 
     public SuperListDetailResponse getSuperList(Long superListId) {
-        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new RuntimeException("Superlist not found."));
+        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new ApiException("Superlist not found.", ErrorType.SUPERLIST_NOT_FOUND));
         return superlistMapper.toDetailResponse(superlist);
     }
 
     public SuperlistResponse createSuperList(Long userId, CreateSuperListRequest request) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found."));
+        User user = userRepository.findById(userId).orElseThrow(() -> new ApiException("User not found.", ErrorType.USER_NOT_FOUND));
         Superlist superlist = new Superlist();
         superlist.setName(request.name());
         user.addSuperList(superlist);
@@ -51,12 +53,12 @@ public class SuperListService {
     }
 
     public void deleteSuperList(Long superListId) {
-        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new RuntimeException("Superlist not found."));
+        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new ApiException("Superlist not found.", ErrorType.SUPERLIST_NOT_FOUND));
         superListRepository.delete(superlist);
     }
 
     public SuperlistResponse addItemToSuperList(Long superListId, ListItemRequest addListItemRequest) {
-        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new RuntimeException("Superlist not found."));
+        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new ApiException("Superlist not found.", ErrorType.SUPERLIST_NOT_FOUND));
         ListItem item = new ListItem();
         item.setContent(addListItemRequest.content());
         superlist.addItem(item);
@@ -66,10 +68,10 @@ public class SuperListService {
 
     @Transactional
     public SuperListDetailResponse updateItem(Long superListId, Long itemId, ListItemRequest listItemRequest) {
-        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new RuntimeException("Superlist not found."));
-        ListItem item = listItemRepository.findById(itemId).orElseThrow(() -> new RuntimeException("List item not found."));
+        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new ApiException("Superlist not found.", ErrorType.SUPERLIST_NOT_FOUND));
+        ListItem item = listItemRepository.findById(itemId).orElseThrow(() -> new ApiException("List item not found.", ErrorType.LIST_ITEM_NOT_FOUND));
         if (!item.getSuperlist().getId().equals(superlist.getId())) {
-            throw new RuntimeException("Item does not belong to this superlist.");
+            throw new ApiException("Item does not belong to this superlist.", ErrorType.ITEM_NOT_BELONG_TO_SUPERLIST);
         }
         item.setContent(listItemRequest.content());
         item.setCompleted(listItemRequest.completed());
@@ -78,10 +80,10 @@ public class SuperListService {
     }
 
     public void deleteListItem(Long superListId, long itemId) {
-        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new RuntimeException("Superlist not found."));
-        ListItem item = listItemRepository.findById(itemId).orElseThrow(() -> new RuntimeException("List item not found."));
+        Superlist superlist = superListRepository.findById(superListId).orElseThrow(() -> new ApiException("Superlist not found.", ErrorType.SUPERLIST_NOT_FOUND));
+        ListItem item = listItemRepository.findById(itemId).orElseThrow(() -> new ApiException("List item not found.", ErrorType.LIST_ITEM_NOT_FOUND));
         if (!item.getSuperlist().getId().equals(superlist.getId())) {
-            throw new RuntimeException("Item does not belong to this superlist.");
+            throw new ApiException("Item does not belong to this superlist.", ErrorType.ITEM_NOT_BELONG_TO_SUPERLIST);
         }
         superlist.removeItem(item);
         superListRepository.save(superlist);
