@@ -2,6 +2,7 @@ package com.smartlist.core_api.controller;
 
 import com.smartlist.core_api.dto.user.CreateUserRequest;
 import com.smartlist.core_api.dto.user.UserResponse;
+import com.smartlist.core_api.response.ApiResponse;
 import com.smartlist.core_api.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +18,7 @@ public class UserController {
     }
 
     @PostMapping
-    public UserResponse createUser(@Valid @RequestBody CreateUserRequest user) {
-        return userService.createUser(user);
+    public ApiResponse<UserResponse> createUser(@Valid @RequestBody CreateUserRequest user) {
+        return ApiResponse.success(userService.createUser(user));
     }
 }
