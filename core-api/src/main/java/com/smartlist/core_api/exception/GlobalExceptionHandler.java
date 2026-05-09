@@ -1,6 +1,7 @@
 package com.smartlist.core_api.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
+import com.smartlist.core_api.response.ApiError;
+import com.smartlist.core_api.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,26 +16,21 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ApiErrorResponse> handleApiException(ApiException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleApiException(ApiException ex) {
 
         ErrorType errorType = ex.getErrorType();
 
-        ApiErrorResponse errorResponse = new ApiErrorResponse(
-                // INSIGHT: INSTANT gives UTC Timestamp.
-                Instant.now(),
-                errorType.getStatus().value(),
-                errorType.getStatus().getReasonPhrase(),
+        ApiError error = new ApiError(
                 errorType.getCode(),
                 ex.getMessage(),
-                request.getRequestURI(),
                 null
         );
 
-        return ResponseEntity.status(errorType.getStatus()).body(errorResponse);
+        return ResponseEntity.status(errorType.getStatus()).body(ApiResponse.failure(error));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleValidationErrors(MethodArgumentNotValidException ex) {
 
         Map<String, String> validationErrors = new HashMap<>();
 
@@ -46,39 +41,26 @@ public class GlobalExceptionHandler {
             );
         }
 
-        ErrorType errorType = ErrorType.VALIDATION_ERROR;
-
-        ApiErrorResponse errorResponse = new ApiErrorResponse(
-                Instant.now(),
-                errorType.getStatus().value(),
-                errorType.getStatus().getReasonPhrase(),
-                errorType.getCode(),
+        ApiError error = new ApiError(
+                ErrorType.VALIDATION_ERROR.getCode(),
                 "Invalid request body",
-                request.getRequestURI(),
                 validationErrors
         );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        return ResponseEntity.badRequest().body(ApiResponse.failure(error));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleGenericException(
-            Exception ex,
-            HttpServletRequest request
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(
+            Exception ex
     ) {
-        ErrorType errorType = ErrorType.INTERNAL_SERVER_ERROR;
-
-        ApiErrorResponse error = new ApiErrorResponse(
-                Instant.now(),
-                errorType.getStatus().value(),
-                errorType.getStatus().getReasonPhrase(),
-                errorType.getCode(),
+        ApiError error = new ApiError(
+                ErrorType.INTERNAL_SERVER_ERROR.getCode(),
                 "Something went wrong",
-                request.getRequestURI(),
                 null
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(error);
+                .body(ApiResponse.failure(error));
     }
 }

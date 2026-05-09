@@ -4,9 +4,9 @@ import com.smartlist.core_api.dto.listItem.ListItemRequest;
 import com.smartlist.core_api.dto.superlist.CreateSuperListRequest;
 import com.smartlist.core_api.dto.superlist.SuperListDetailResponse;
 import com.smartlist.core_api.dto.superlist.SuperlistResponse;
+import com.smartlist.core_api.response.ApiResponse;
 import com.smartlist.core_api.service.SuperListService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,41 +22,43 @@ public class SuperListController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<SuperlistResponse> listSuperListsForUser(@PathVariable Long userId) {
-        return superListService.listSuperListsForUser(userId);
+    public ApiResponse<List<SuperlistResponse>> listSuperListsForUser(@PathVariable Long userId) {
+        return ApiResponse.success(superListService.listSuperListsForUser(userId));
     }
 
     @GetMapping("/{superListId}")
-    public SuperListDetailResponse getSuperList(@PathVariable Long superListId) {
-        return superListService.getSuperList(superListId);
+    public ApiResponse<SuperListDetailResponse> getSuperList(@PathVariable Long superListId) {
+        return ApiResponse.success(superListService.getSuperList(superListId));
     }
 
     @PostMapping("/user/{userId}")
-    public SuperlistResponse createSuperList(@PathVariable Long userId, @Valid @RequestBody CreateSuperListRequest superlist) {
-        return superListService.createSuperList(userId, superlist);
+    public ApiResponse<SuperlistResponse> createSuperList(@PathVariable Long userId, @Valid @RequestBody CreateSuperListRequest superlist) {
+        return ApiResponse.success(superListService.createSuperList(userId, superlist));
     }
 
     @DeleteMapping("/{superListId}")
     // INSIGHT: @ResponseStatus: To define the HTTP status code that should be returned.
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteSuperList(@PathVariable Long superListId) {
+    // @ResponseStatus(HttpStatus.NO_CONTENT)
+    // ⬆️ 204 No Content is not valid anymore, because there is a body in the response.
+    public ApiResponse<Void> deleteSuperList(@PathVariable Long superListId) {
         superListService.deleteSuperList(superListId);
+        return ApiResponse.success(null);
     }
 
     @PostMapping("/{superListId}/items")
-    public SuperlistResponse addItem (@PathVariable Long superListId, @RequestBody ListItemRequest listItemRequest) {
-        return superListService.addItemToSuperList(superListId, listItemRequest);
+    public ApiResponse<SuperlistResponse> addItem (@PathVariable Long superListId, @RequestBody ListItemRequest listItemRequest) {
+        return ApiResponse.success(superListService.addItemToSuperList(superListId, listItemRequest));
     }
 
     // INSIGHT: @PatchMapping is used here because you are doing a partial update, not replacing the entire resource.
     @PatchMapping("/{superListId}/items/{itemId}")
-    public SuperListDetailResponse patchItem(@PathVariable Long superListId, @PathVariable Long itemId, @RequestBody ListItemRequest listItemRequest) {
-        return superListService.updateItem(superListId, itemId, listItemRequest);
+    public ApiResponse<SuperListDetailResponse> patchItem(@PathVariable Long superListId, @PathVariable Long itemId, @RequestBody ListItemRequest listItemRequest) {
+        return ApiResponse.success(superListService.updateItem(superListId, itemId, listItemRequest));
     }
 
     @DeleteMapping("/{superListId}/items/{itemId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteListItem(@PathVariable Long superListId, @PathVariable Long itemId) {
+    public ApiResponse<Void> deleteListItem(@PathVariable Long superListId, @PathVariable Long itemId) {
         superListService.deleteListItem(superListId, itemId);
+        return ApiResponse.success(null);
     }
 }
